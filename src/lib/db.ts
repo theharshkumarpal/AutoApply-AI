@@ -1,8 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
+const fallbackDbUrl =
   'postgresql://postgres.vbkadnixyzsqehpdzftc:RT9bvG8YnFS-%409V@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true';
+const fallbackDirectUrl =
+  'postgresql://postgres.vbkadnixyzsqehpdzftc:RT9bvG8YnFS-%409V@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres';
+
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.trim() === '') {
+  process.env.DATABASE_URL = fallbackDbUrl;
+}
+if (!process.env.DIRECT_URL || process.env.DIRECT_URL.trim() === '') {
+  process.env.DIRECT_URL = fallbackDirectUrl;
+}
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
@@ -11,7 +19,7 @@ export const prisma =
   new PrismaClient({
     datasources: {
       db: {
-        url: databaseUrl,
+        url: process.env.DATABASE_URL,
       },
     },
   });
