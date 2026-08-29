@@ -84,48 +84,48 @@ export async function POST(req: Request) {
     const profile = await prisma.profile.findFirst();
     const resumeText = profile?.resumeSummary || 'Full Stack Software Engineer React Next.js TypeScript Node.js Python';
 
-    // Limit to top 40 jobs
-    const targetJobs = scrapedJobsForCompany.slice(0, 40);
+    // Limit to top 20 jobs for fast execution
+    const targetJobs = scrapedJobsForCompany.slice(0, 20);
 
-    // Save into DB with HuggingFace ChatModel Enriched Details
-    let savedCount = 0;
-    for (const job of targetJobs) {
-      const enriched = await enrichJobDetails(job.title, job.company, job.description);
-      const matchScore = await calculateAtsMatchScore(resumeText, job.description);
+    // Save into DB with Enriched Details in parallel
+    const savedJobs = await Promise.all(
+      targetJobs.map(async (job) => {
+        const enriched = await enrichJobDetails(job.title, job.company, job.description);
+        const matchScore = await calculateAtsMatchScore(resumeText, job.description);
 
-      await prisma.job.upsert({
-        where: { url: job.url },
-        update: {
-          cleanSummary: enriched.cleanSummary,
-          reqSkills: enriched.reqSkills,
-          minExp: enriched.minExp,
-          salaryRange: enriched.salaryRange,
-          refinedDescription: enriched.refinedDescription,
-          matchScore,
-        },
-        create: {
-          title: job.title,
-          company: job.company,
-          location: job.location,
-          type: job.type,
-          url: job.url,
-          platform: job.platform,
-          description: job.description,
-          cleanSummary: enriched.cleanSummary,
-          reqSkills: enriched.reqSkills,
-          minExp: enriched.minExp,
-          salaryRange: enriched.salaryRange,
-          refinedDescription: enriched.refinedDescription,
-          matchScore,
-        },
-      });
-      savedCount++;
-    }
+        return prisma.job.upsert({
+          where: { url: job.url },
+          update: {
+            cleanSummary: enriched.cleanSummary,
+            reqSkills: enriched.reqSkills,
+            minExp: enriched.minExp,
+            salaryRange: enriched.salaryRange,
+            refinedDescription: enriched.refinedDescription,
+            matchScore,
+          },
+          create: {
+            title: job.title,
+            company: job.company,
+            location: job.location,
+            type: job.type,
+            url: job.url,
+            platform: job.platform,
+            description: job.description,
+            cleanSummary: enriched.cleanSummary,
+            reqSkills: enriched.reqSkills,
+            minExp: enriched.minExp,
+            salaryRange: enriched.salaryRange,
+            refinedDescription: enriched.refinedDescription,
+            matchScore,
+          },
+        });
+      })
+    );
 
     return NextResponse.json({
       success: true,
-      message: `Scraped and enriched ${savedCount} job openings!`,
-      count: savedCount,
+      message: `Scraped and enriched ${savedJobs.length} job openings!`,
+      count: savedJobs.length,
     });
   } catch (error: any) {
     console.error('[API Scrape Error]:', error);

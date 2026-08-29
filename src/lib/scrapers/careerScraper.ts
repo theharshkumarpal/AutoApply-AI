@@ -18,7 +18,7 @@ async function fetchFullPageContent(jobUrl: string): Promise<string> {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
-      timeout: 5000,
+      timeout: 2000,
     });
     const $ = cheerio.load(res.data);
 
@@ -41,7 +41,7 @@ async function fetchFullPageContent(jobUrl: string): Promise<string> {
 export async function scrapeGreenhouse(boardToken: string, companyName: string): Promise<ScrapedJob[]> {
   try {
     const res = await axios.get(`https://boards-api.greenhouse.io/v1/boards/${boardToken}/jobs?content=true`, {
-      timeout: 10000,
+      timeout: 5000,
     });
     
     if (!res.data || !res.data.jobs) return [];
@@ -64,7 +64,7 @@ export async function scrapeGreenhouse(boardToken: string, companyName: string):
 export async function scrapeLever(companyName: string): Promise<ScrapedJob[]> {
   try {
     const res = await axios.get(`https://api.lever.co/v0/postings/${companyName}?mode=json`, {
-      timeout: 10000,
+      timeout: 5000,
     });
     
     if (!Array.isArray(res.data)) return [];
@@ -94,40 +94,42 @@ export async function scrapeLinkedInJobs(companyName: string, locationQuery?: st
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
-      timeout: 12000,
+      timeout: 5000,
     });
 
     const $ = cheerio.load(res.data);
-    const jobs: ScrapedJob[] = [];
 
-    const jobElements = $('.jobs-search__results-list li').toArray().slice(0, 20);
+    const rawElements = $('.jobs-search__results-list li').toArray().slice(0, 10);
 
-    for (const el of jobElements) {
-      const title = $(el).find('.base-search-card__title').text().trim();
-      const comp = $(el).find('.base-search-card__subtitle').text().trim() || formattedCompany;
-      const location = $(el).find('.job-search-card__location').text().trim() || locationQuery || 'Global / Unspecified';
-      const link = $(el).find('a.base-card__full-link').attr('href') || '';
+    const jobs = (
+      await Promise.all(
+        rawElements.map(async (el) => {
+          const title = $(el).find('.base-search-card__title').text().trim();
+          const comp = $(el).find('.base-search-card__subtitle').text().trim() || formattedCompany;
+          const location = $(el).find('.job-search-card__location').text().trim() || locationQuery || 'Global / Unspecified';
+          const link = $(el).find('a.base-card__full-link').attr('href') || '';
 
-      const isGenericPage = /careers|jobs|login|about|working-here|privacy/i.test(title);
+          const isGenericPage = /careers|jobs|login|about|working-here|privacy/i.test(title);
 
-      if (title && link && !isGenericPage) {
-        // Fetch full page body content dynamically if link is valid
-        let fullDescription = await fetchFullPageContent(link);
-        if (!fullDescription || fullDescription.length < 50) {
-          fullDescription = `Specific position: ${title} at ${comp}. Location: ${location}. Key requirements: ${title} expertise, industry experience, and leadership.`;
-        }
+          if (!title || !link || isGenericPage) return null;
 
-        jobs.push({
-          title,
-          company: comp,
-          location,
-          type: 'Full-time',
-          url: link,
-          platform: 'Direct Careers',
-          description: fullDescription,
-        });
-      }
-    }
+          let fullDescription = await fetchFullPageContent(link);
+          if (!fullDescription || fullDescription.length < 50) {
+            fullDescription = `Specific position: ${title} at ${comp}. Location: ${location}. Key requirements: ${title} expertise, industry experience, and leadership.`;
+          }
+
+          return {
+            title,
+            company: comp,
+            location,
+            type: 'Full-time',
+            url: link,
+            platform: 'Direct Careers' as const,
+            description: fullDescription,
+          };
+        })
+      )
+    ).filter(Boolean) as ScrapedJob[];
 
     return jobs;
   } catch (err) {
