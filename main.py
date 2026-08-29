@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pypdf import PdfReader
 import requests
 import chromadb
+from huggingface_hub import InferenceClient
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -255,12 +256,12 @@ def build_summary_from_sections(sections: dict, job_title: str, company: str) ->
 
 
 # ---------------------------------------------------------
-# HELPER: Query AI LLM (Hugging Face Router / Groq / Fallback)
+# HELPER: Query AI LLM (Hugging Face / Groq / Fallback)
 # ---------------------------------------------------------
 def query_hf(prompt: str, max_tokens: int = 400) -> str:
-    # 1. Try Groq API if key exists (Lightning fast free inference)
+    # 1. Try Groq API if key exists
     groq_key = os.getenv("GROQ_API_KEY", "")
-    if groq_key:
+    if groq_key and not groq_key.startswith("gsk_your"):
         try:
             res = requests.post(
                 "https://api.groq.com/openai/v1/chat/completions",
@@ -279,50 +280,28 @@ def query_hf(prompt: str, max_tokens: int = 400) -> str:
         except Exception as e:
             print("[Groq API Error]:", e)
 
-    # 2. Try Hugging Face Router Chat Completions API
+    # 2. Try Hugging Face InferenceClient
     hf_token = os.getenv("HUGGINGFACE_API_KEY", os.getenv("HUGGINGFACEHUB_API_TOKEN", os.getenv("HF_TOKEN", "")))
-    if hf_token:
-        headers = {"Authorization": f"Bearer {hf_token}", "Content-Type": "application/json"}
+    if hf_token and not hf_token.startswith("hf_your_huggingface"):
+        client = InferenceClient(token=hf_token)
         hf_models = [
-            "Qwen/Qwen2.5-72B-Instruct",
-            "meta-llama/Meta-Llama-3-8B-Instruct",
-            "mistralai/Mistral-7B-Instruct-v0.3"
+            "Qwen/Qwen2.5-Coder-32B-Instruct",
+            "meta-llama/Llama-3.2-3B-Instruct",
+            "microsoft/Phi-3-mini-4k-instruct"
         ]
         for model in hf_models:
-            # Try OpenAI compatible endpoint on HF router
             try:
-                res = requests.post(
-                    "https://router.huggingface.co/hf-inference/v1/chat/completions",
-                    headers=headers,
-                    json={
-                        "model": model,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "max_tokens": max_tokens,
-                        "temperature": 0.1
-                    },
-                    timeout=8
+                res = client.chat_completion(
+                    model=model,
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=max_tokens,
+                    temperature=0.1
                 )
-                if res.status_code == 200:
-                    out = res.json()["choices"][0]["message"]["content"]
-                    if out: return out.strip()
+                out = res.choices[0].message.content
+                if out:
+                    return out.strip()
             except Exception as e:
-                print(f"[HF Chat Endpoint {model} Error]:", e)
-
-            # Try direct model router endpoint
-            try:
-                res = requests.post(
-                    f"https://router.huggingface.co/models/{model}",
-                    headers=headers,
-                    json={"inputs": prompt, "parameters": {"max_new_tokens": max_tokens, "temperature": 0.1}},
-                    timeout=8
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    if isinstance(data, list) and len(data) > 0:
-                        gen = data[0].get("generated_text", "")
-                        if gen: return gen.strip()
-            except Exception as e:
-                print(f"[HF Direct Endpoint {model} Error]:", e)
+                print(f"[HF Model {model} Error]:", e)
 
     return ""
 
