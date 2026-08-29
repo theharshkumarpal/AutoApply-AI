@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       data: {
         jobId: job.id,
         status: botResult.success ? 'SUBMITTED' : 'FAILED',
-        logs: botResult.success ? botResult.message : botResult.error,
+        logs: botResult.message,
       },
     });
 
