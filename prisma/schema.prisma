@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Job {
+  id           String        @id @default(uuid())
+  title        String
+  company      String
+  location     String
+  type         String        @default("Full-time")
+  url          String        @unique
+  platform     String        // Greenhouse, Lever, Direct
+  postedAt     DateTime      @default(now())
+  description  String
+  cleanSummary String?       // HuggingFace AI generated polished job summary
+  reqSkills    String?       // HuggingFace AI extracted key skills (comma-separated)
+  minExp       String?       // HuggingFace AI extracted experience requirement
+  salaryRange  String?       // HuggingFace AI extracted estimated salary range
+  matchScore   Int?          // AI computed ATS match score
+  applications Application[]
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  fullName        String
+  email           String
+  phone           String
+  linkedinUrl     String
+  githubUrl       String
+  portfolioUrl    String
+  yearsExperience Int
+  skills          String   // Comma separated or JSON string
+  jobPreferences  String?  // Candidate natural language job preferences & target roles
+  resumeSummary   String
+}
+
+model Application {
+  id          String   @id @default(uuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id])
+  status      String   // QUEUED, MATCHED, SUBMITTED, FAILED
+  logs        String?  // Execution log details
+  appliedAt   DateTime @default(now())
+}
