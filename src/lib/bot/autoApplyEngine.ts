@@ -1,5 +1,3 @@
-import { chromium } from 'playwright';
-
 export interface ApplicantProfile {
   fullName: string;
   email: string;
@@ -13,6 +11,9 @@ export interface ApplicantProfile {
 export async function runAutoApplyBot(jobUrl: string, applicant: ApplicantProfile, platform: string) {
   let browser = null;
   try {
+    // Dynamic import to prevent top-level module initialization failure on cloud serverless (Vercel)
+    const { chromium } = await import('playwright');
+
     // Launch Chrome binary if available
     browser = await chromium.launch({
       headless: true,
