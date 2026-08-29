@@ -5,6 +5,7 @@ export interface EnrichedJobDetails {
   reqSkills: string;
   minExp: string;
   salaryRange: string;
+  refinedDescription?: string;
 }
 
 export async function enrichJobDetails(jobTitle: string, company: string, description: string): Promise<EnrichedJobDetails> {

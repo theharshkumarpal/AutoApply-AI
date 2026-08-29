@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { runAutoApplyBot } from '@/lib/bot/autoApplyEngine';
 import { generateCoverLetter } from '@/lib/ai/huggingface';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const { jobId } = await req.json();

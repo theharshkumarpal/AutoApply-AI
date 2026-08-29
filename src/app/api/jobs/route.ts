@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { scrapeGreenhouse, scrapeLever, scrapeLinkedInJobs, scrapeFallbackWeb } from '@/lib/scrapers/careerScraper';
 import { enrichJobDetails, calculateAtsMatchScore } from '@/lib/ai/huggingface';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     let customCompany: string | null = null;
@@ -98,6 +100,7 @@ export async function POST(req: Request) {
           reqSkills: enriched.reqSkills,
           minExp: enriched.minExp,
           salaryRange: enriched.salaryRange,
+          refinedDescription: enriched.refinedDescription,
           matchScore,
         },
         create: {
@@ -112,6 +115,7 @@ export async function POST(req: Request) {
           reqSkills: enriched.reqSkills,
           minExp: enriched.minExp,
           salaryRange: enriched.salaryRange,
+          refinedDescription: enriched.refinedDescription,
           matchScore,
         },
       });

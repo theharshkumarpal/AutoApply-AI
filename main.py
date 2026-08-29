@@ -99,6 +99,7 @@ class EnrichJobResponse(BaseModel):
     reqSkills: str
     minExp: str
     salaryRange: str
+    refinedDescription: Optional[str] = None
 
 class VectorSearchRequest(BaseModel):
     query: str
@@ -378,6 +379,38 @@ async def parse_cv(file: UploadFile = File(...)):
     )
 
 
+def refine_job_description_nlp(clean_text: str, job_title: str, company: str) -> str:
+    """Section-aware NLP refiner that converts raw scraped text into clean structured Markdown offline."""
+    sections = extract_role_sections(clean_text)
+    parts = [f"## Role Overview\n**Position:** {job_title}\n**Company:** {company}"]
+
+    if sections.get("responsibilities"):
+        resp_lines = [l.lstrip("• -–").strip() for l in sections["responsibilities"] if len(l.strip()) > 15]
+        if resp_lines:
+            parts.append("## Key Responsibilities\n" + "\n".join([f"• {r}" for r in resp_lines[:10]]))
+
+    if sections.get("requirements"):
+        req_lines = [l.lstrip("• -–").strip() for l in sections["requirements"] if len(l.strip()) > 15]
+        if req_lines:
+            parts.append("## Qualifications & Technical Stack\n" + "\n".join([f"• {r}" for r in req_lines[:10]]))
+
+    if sections.get("preferred"):
+        pref_lines = [l.lstrip("• -–").strip() for l in sections["preferred"] if len(l.strip()) > 15]
+        if pref_lines:
+            parts.append("## Preferred Skills & Bonus Points\n" + "\n".join([f"• {r}" for r in pref_lines[:6]]))
+
+    if sections.get("benefits"):
+        ben_lines = [l.lstrip("• -–").strip() for l in sections["benefits"] if len(l.strip()) > 15]
+        if ben_lines:
+            parts.append("## Perks & Compensation\n" + "\n".join([f"• {b}" for b in ben_lines[:6]]))
+
+    if len(parts) <= 1:
+        clean_body = re.sub(r"(?i)(sign in|apply now|skip to (main )?content|cookie policy|equal opportunity).*", "", clean_text)
+        parts.append(f"## Position Description\n{clean_body[:2000]}")
+
+    return "\n\n".join(parts)
+
+
 @app.post("/api/ai/enrich-job", response_model=EnrichJobResponse)
 def enrich_job(req: EnrichJobRequest):
     raw_desc = req.description or ""
@@ -463,7 +496,24 @@ def enrich_job(req: EnrichJobRequest):
         else:
             salary_range = "Competitive Salary"
 
-    # Step 9: Index into ChromaDB vector store
+    # Step 9: Full Job Description Refiner (ChatModel + Section-Aware NLP Fallback)
+    refine_prompt = (
+        f"You are an Executive Recruiter. Refine and format the raw job posting for '{job_title}' at '{company}'.\n"
+        f"Rules:\n"
+        f"1. Remove ALL navigation clutter (Sign in, Apply, Skip to content, Cookie policy, Footer links, Social sharing).\n"
+        f"2. Structure into clean markdown headings:\n"
+        f"   ## Role Overview\n"
+        f"   ## Key Responsibilities\n"
+        f"   ## Qualifications & Technical Stack\n"
+        f"   ## Perks & Work Environment\n"
+        f"3. Preserve all specific technical requirements, skills, and duties.\n\n"
+        f"RAW POSTING TEXT:\n{clean_text[:2800]}"
+    )
+    refined_desc = query_hf(refine_prompt, max_tokens=650)
+    if not refined_desc or len(refined_desc) < 80:
+        refined_desc = refine_job_description_nlp(clean_text, job_title, company)
+
+    # Step 10: Index into ChromaDB vector store
     try:
         doc_text = f"Title: {job_title} Company: {company} Skills: {req_skills_str} Summary: {clean_summary} Description: {clean_text[:1000]}"
         doc_id = re.sub(r"[^\w]", "_", f"{company}_{job_title}").lower()[:60]
@@ -479,7 +529,8 @@ def enrich_job(req: EnrichJobRequest):
         cleanSummary=clean_summary,
         reqSkills=req_skills_str,
         minExp=min_exp,
-        salaryRange=salary_range
+        salaryRange=salary_range,
+        refinedDescription=refined_desc
     )
 
 

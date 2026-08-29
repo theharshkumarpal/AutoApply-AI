@@ -426,9 +426,18 @@ export function JobFeed({
 
                   {/* Collapsible Full Job Description */}
                   {isExpanded && (
-                    <div className="mt-4 p-4 bg-black border border-zinc-900 rounded-md text-xs text-zinc-400 space-y-2 max-h-80 overflow-y-auto font-mono">
-                      <h4 className="text-white font-semibold text-xs font-sans">Full Job Description:</h4>
-                      <p className="whitespace-pre-line leading-relaxed">{stripHtmlForDisplay(job.description)}</p>
+                    <div className="mt-4 p-4 bg-black border border-zinc-900 rounded-md text-xs text-zinc-400 space-y-2 max-h-96 overflow-y-auto font-mono">
+                      <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
+                        <h4 className="text-white font-semibold text-xs font-sans">Full Job Description:</h4>
+                        {job.refinedDescription && (
+                          <span className="text-[10px] text-amber-400 font-mono flex items-center gap-1 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/50">
+                            <Sparkles className="w-3 h-3 text-amber-400" /> ChatModel Refined
+                          </span>
+                        )}
+                      </div>
+                      <div className="whitespace-pre-line leading-relaxed text-zinc-300">
+                        {stripHtmlForDisplay(job.refinedDescription || job.description)}
+                      </div>
                     </div>
                   )}
                 </div>

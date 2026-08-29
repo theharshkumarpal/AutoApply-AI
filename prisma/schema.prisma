@@ -17,8 +17,9 @@ model Job {
   url          String        @unique
   platform     String        // Greenhouse, Lever, Direct
   postedAt     DateTime      @default(now())
-  description  String
-  cleanSummary String?       // HuggingFace AI generated polished job summary
+  description        String
+  refinedDescription String?       // ChatModel refined & cleaned full job description
+  cleanSummary       String?       // HuggingFace AI generated polished job summary
   reqSkills    String?       // HuggingFace AI extracted key skills (comma-separated)
   minExp       String?       // HuggingFace AI extracted experience requirement
   salaryRange  String?       // HuggingFace AI extracted estimated salary range

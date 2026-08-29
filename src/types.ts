@@ -8,6 +8,7 @@ export interface Job {
   platform: string;
   postedAt: string;
   description: string;
+  refinedDescription?: string | null;
   cleanSummary?: string | null;
   reqSkills?: string | null;
   minExp?: string | null;
