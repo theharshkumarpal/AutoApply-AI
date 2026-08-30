@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { RefreshCw, LayoutGrid, List, Bookmark, Send, CalendarCheck, Trophy, XCircle, MapPin, Building, ExternalLink, ArrowRight } from 'lucide-react';
+import { RefreshCw, LayoutGrid, List, Bookmark, Send, CalendarCheck, Trophy, XCircle, MapPin, Building, ExternalLink } from 'lucide-react';
 import { ApplicationLog } from '@/types';
 
 interface ApplicationLogsProps {
@@ -13,6 +13,7 @@ interface ApplicationLogsProps {
 
 export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }: ApplicationLogsProps) {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [selectedMobileCol, setSelectedMobileCol] = useState<string>('ALL');
 
   // Compute analytics
   const totalApps = logs.length;
@@ -25,11 +26,11 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
   const interviewRate = totalApps > 0 ? Math.round(((interviewingCount + offerCount) / totalApps) * 100) : 0;
 
   const columns = [
-    { key: 'SAVED', label: 'Saved', icon: Bookmark, color: 'text-blue-400', badge: 'bg-blue-950/40 border-blue-800 text-blue-300' },
-    { key: 'SUBMITTED', label: 'Applied', icon: Send, color: 'text-emerald-400', badge: 'bg-emerald-950/40 border-emerald-800 text-emerald-300' },
-    { key: 'INTERVIEWING', label: 'Interviewing', icon: CalendarCheck, color: 'text-amber-400', badge: 'bg-amber-950/40 border-amber-800 text-amber-300' },
-    { key: 'OFFER', label: 'Offers', icon: Trophy, color: 'text-purple-400', badge: 'bg-purple-950/40 border-purple-800 text-purple-300' },
-    { key: 'REJECTED', label: 'Archived / Failed', icon: XCircle, color: 'text-rose-400', badge: 'bg-rose-950/40 border-rose-800 text-rose-300' },
+    { key: 'SAVED', label: 'Saved', count: savedCount, icon: Bookmark, color: 'text-blue-400', badge: 'bg-blue-950/40 border-blue-800 text-blue-300' },
+    { key: 'SUBMITTED', label: 'Applied', count: submittedCount, icon: Send, color: 'text-emerald-400', badge: 'bg-emerald-950/40 border-emerald-800 text-emerald-300' },
+    { key: 'INTERVIEWING', label: 'Interviewing', count: interviewingCount, icon: CalendarCheck, color: 'text-amber-400', badge: 'bg-amber-950/40 border-amber-800 text-amber-300' },
+    { key: 'OFFER', label: 'Offers', count: offerCount, icon: Trophy, color: 'text-purple-400', badge: 'bg-purple-950/40 border-purple-800 text-purple-300' },
+    { key: 'REJECTED', label: 'Archived', count: rejectedCount, icon: XCircle, color: 'text-rose-400', badge: 'bg-rose-950/40 border-rose-800 text-rose-300' },
   ];
 
   const handleStatusChange = (appId: string, newStatus: string) => {
@@ -38,23 +39,27 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
     }
   };
 
+  const filteredColumns = selectedMobileCol === 'ALL'
+    ? columns
+    : columns.filter((col) => col.key === selectedMobileCol);
+
   return (
-    <section className="space-y-6">
+    <section className="space-y-5 sm:space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white tracking-tight">Job Application Pipeline & Analytics</h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">Job Application Pipeline & Analytics</h2>
+          <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5">
             Manage application stages across your job search pipeline in real-time.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
           {/* View Toggle */}
           <div className="flex items-center bg-zinc-900 border border-zinc-800 p-1 rounded-lg">
             <button
               onClick={() => setViewMode('kanban')}
-              className={`p-1.5 rounded text-xs font-medium transition flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center gap-1 ${
                 viewMode === 'kanban' ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -62,7 +67,7 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded text-xs font-medium transition flex items-center gap-1 ${
+              className={`px-2.5 py-1.5 rounded text-xs font-medium transition flex items-center gap-1 ${
                 viewMode === 'list' ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -79,31 +84,31 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
         </div>
       </div>
 
-      {/* Analytics Dashboard Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
-        <div className="space-y-1">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Total Active</span>
-          <p className="text-xl font-bold font-mono text-white">{totalApps}</p>
+      {/* Analytics Dashboard Banner - Perfectly Aligned Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 p-3.5 sm:p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Total Active</span>
+          <p className="text-lg sm:text-xl font-bold font-mono text-white">{totalApps}</p>
         </div>
 
-        <div className="space-y-1">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Applied</span>
-          <p className="text-xl font-bold font-mono text-emerald-400">{submittedCount}</p>
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Applied</span>
+          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400">{submittedCount}</p>
         </div>
 
-        <div className="space-y-1">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Interviewing</span>
-          <p className="text-xl font-bold font-mono text-amber-400">{interviewingCount}</p>
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Interviewing</span>
+          <p className="text-lg sm:text-xl font-bold font-mono text-amber-400">{interviewingCount}</p>
         </div>
 
-        <div className="space-y-1">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Offers Received</span>
-          <p className="text-xl font-bold font-mono text-purple-400">{offerCount}</p>
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Offers</span>
+          <p className="text-lg sm:text-xl font-bold font-mono text-purple-400">{offerCount}</p>
         </div>
 
-        <div className="space-y-1 col-span-2 sm:col-span-1">
-          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Interview Rate</span>
-          <p className="text-xl font-bold font-mono text-emerald-400">{interviewRate}%</p>
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Interview Rate</span>
+          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400">{interviewRate}%</p>
         </div>
       </div>
 
@@ -118,99 +123,128 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
           </p>
         </div>
       ) : viewMode === 'kanban' ? (
-        /* Kanban Columns View */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-start">
-          {columns.map((col) => {
-            const Icon = col.icon;
-            const colLogs = logs.filter((l) => {
-              if (col.key === 'SUBMITTED') return l.status === 'SUBMITTED' || l.status === 'APPLIED';
-              if (col.key === 'REJECTED') return l.status === 'REJECTED' || l.status === 'FAILED';
-              return l.status === col.key;
-            });
+        <div className="space-y-4">
+          {/* Mobile Column Filter Pill Strip */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full md:hidden">
+            <button
+              onClick={() => setSelectedMobileCol('ALL')}
+              className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition border ${
+                selectedMobileCol === 'ALL'
+                  ? 'bg-white text-black border-white font-bold'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+              }`}
+            >
+              All Stages ({totalApps})
+            </button>
+            {columns.map((col) => (
+              <button
+                key={col.key}
+                onClick={() => setSelectedMobileCol(col.key)}
+                className={`px-3 py-1 rounded-full text-xs font-mono whitespace-nowrap transition border ${
+                  selectedMobileCol === col.key
+                    ? 'bg-zinc-800 text-white border-zinc-700 font-bold'
+                    : 'bg-zinc-900 text-zinc-400 border-zinc-800'
+                }`}
+              >
+                {col.label} ({col.count})
+              </button>
+            ))}
+          </div>
 
-            return (
-              <div key={col.key} className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-3 min-h-[350px]">
-                {/* Column Header */}
-                <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
-                  <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-white uppercase tracking-wider">
-                    <Icon className={`w-4 h-4 ${col.color}`} /> {col.label}
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold">
-                    {colLogs.length}
-                  </span>
-                </div>
+          {/* Kanban Responsive Grid / Container */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+            {filteredColumns.map((col) => {
+              const Icon = col.icon;
+              const colLogs = logs.filter((l) => {
+                if (col.key === 'SUBMITTED') return l.status === 'SUBMITTED' || l.status === 'APPLIED';
+                if (col.key === 'REJECTED') return l.status === 'REJECTED' || l.status === 'FAILED';
+                return l.status === col.key;
+              });
 
-                {/* Cards Container */}
-                <div className="space-y-3">
-                  {colLogs.length === 0 ? (
-                    <div className="py-8 text-center text-[11px] font-mono text-zinc-600 border border-dashed border-zinc-900 rounded-lg">
-                      No jobs in {col.label}
+              return (
+                <div key={col.key} className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-3 min-h-[250px] md:min-h-[350px]">
+                  {/* Column Header */}
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-white uppercase tracking-wider">
+                      <Icon className={`w-4 h-4 ${col.color} shrink-0`} /> <span className="truncate">{col.label}</span>
                     </div>
-                  ) : (
-                    colLogs.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3 bg-black border border-zinc-800 hover:border-zinc-700 rounded-lg space-y-2.5 transition shadow"
-                      >
-                        <div>
-                          <h4 className="text-xs font-bold text-white tracking-tight leading-snug">
-                            {item.job.title}
-                          </h4>
-                          <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1 font-mono">
-                            <span className="flex items-center gap-1">
-                              <Building className="w-3 h-3 text-zinc-500" /> {item.job.company}
-                            </span>
-                            <a
-                              href={item.job.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-zinc-500 hover:text-white"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          </div>
-                        </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold shrink-0">
+                      {colLogs.length}
+                    </span>
+                  </div>
 
-                        {item.job.location && (
-                          <div className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-emerald-500" /> {item.job.location}
-                          </div>
-                        )}
-
-                        {/* Interactive Stage Selector */}
-                        <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-1">
-                          <span className="text-[9px] font-mono text-zinc-500 uppercase">Stage:</span>
-                          <select
-                            value={col.key === 'SUBMITTED' && item.status === 'APPLIED' ? 'SUBMITTED' : item.status}
-                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                            className="text-[10px] font-mono px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded focus:outline-none focus:border-zinc-600 transition"
-                          >
-                            <option value="SAVED">Saved</option>
-                            <option value="SUBMITTED">Applied</option>
-                            <option value="INTERVIEWING">Interviewing</option>
-                            <option value="OFFER">Offer</option>
-                            <option value="REJECTED">Rejected</option>
-                          </select>
-                        </div>
+                  {/* Cards Container */}
+                  <div className="space-y-3">
+                    {colLogs.length === 0 ? (
+                      <div className="py-8 text-center text-[11px] font-mono text-zinc-600 border border-dashed border-zinc-900 rounded-lg">
+                        No jobs in {col.label}
                       </div>
-                    ))
-                  )}
+                    ) : (
+                      colLogs.map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-3 bg-black border border-zinc-800 hover:border-zinc-700 rounded-lg space-y-2.5 transition shadow"
+                        >
+                          <div>
+                            <h4 className="text-xs font-bold text-white tracking-tight leading-snug break-words line-clamp-2">
+                              {item.job.title}
+                            </h4>
+                            <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1.5 font-mono gap-2">
+                              <span className="flex items-center gap-1 truncate max-w-[80%]">
+                                <Building className="w-3 h-3 text-zinc-500 shrink-0" /> <span className="truncate">{item.job.company}</span>
+                              </span>
+                              <a
+                                href={item.job.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-zinc-500 hover:text-white shrink-0"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </div>
+
+                          {item.job.location && (
+                            <div className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 truncate">
+                              <MapPin className="w-3 h-3 text-emerald-500 shrink-0" /> <span className="truncate">{item.job.location}</span>
+                            </div>
+                          )}
+
+                          {/* Interactive Stage Selector */}
+                          <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2">
+                            <span className="text-[9px] font-mono text-zinc-500 uppercase shrink-0">Stage:</span>
+                            <select
+                              value={col.key === 'SUBMITTED' && item.status === 'APPLIED' ? 'SUBMITTED' : item.status}
+                              onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                              className="text-[10px] font-mono px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded focus:outline-none focus:border-zinc-600 transition w-full max-w-[130px] truncate"
+                            >
+                              <option value="SAVED">Saved</option>
+                              <option value="SUBMITTED">Applied</option>
+                              <option value="INTERVIEWING">Interviewing</option>
+                              <option value="OFFER">Offer</option>
+                              <option value="REJECTED">Rejected</option>
+                            </select>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       ) : (
         /* List Audit Log View */
         <div className="space-y-3">
           {logs.map((item) => (
-            <div key={item.id} className="p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2">
-              <div className="flex items-center justify-between">
+            <div key={item.id} className="p-3.5 sm:p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <span className="text-xs font-semibold text-white">{item.job.title}</span>
+                  <span className="text-xs font-bold text-white break-words">{item.job.title}</span>
                   <span className="text-xs text-zinc-400 ml-2">@ {item.job.company}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-start sm:self-auto">
                   <select
                     value={item.status}
                     onChange={(e) => handleStatusChange(item.id, e.target.value)}
@@ -225,11 +259,11 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
                 </div>
               </div>
 
-              <p className="text-xs font-mono text-zinc-400 bg-black p-2 rounded border border-zinc-900">
+              <p className="text-xs font-mono text-zinc-400 bg-black p-2.5 rounded border border-zinc-900 break-words leading-relaxed">
                 {item.logs || 'No log details available.'}
               </p>
 
-              <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 font-mono">
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 font-mono gap-2 flex-wrap">
                 <span>Platform: {item.job.platform}</span>
                 <span>{new Date(item.appliedAt).toLocaleString()}</span>
               </div>
