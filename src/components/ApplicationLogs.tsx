@@ -84,31 +84,31 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
         </div>
       </div>
 
-      {/* Analytics Dashboard Banner - Perfectly Aligned Grid */}
+      {/* Analytics Dashboard Banner */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 p-3.5 sm:p-4 bg-zinc-950 border border-zinc-800 rounded-xl">
-        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 min-w-0">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Total Active</span>
-          <p className="text-lg sm:text-xl font-bold font-mono text-white">{totalApps}</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-white truncate">{totalApps}</p>
         </div>
 
-        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 min-w-0">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Applied</span>
-          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400">{submittedCount}</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400 truncate">{submittedCount}</p>
         </div>
 
-        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 min-w-0">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Interviewing</span>
-          <p className="text-lg sm:text-xl font-bold font-mono text-amber-400">{interviewingCount}</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-amber-400 truncate">{interviewingCount}</p>
         </div>
 
-        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 min-w-0">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Offers</span>
-          <p className="text-lg sm:text-xl font-bold font-mono text-purple-400">{offerCount}</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-purple-400 truncate">{offerCount}</p>
         </div>
 
-        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 col-span-2 sm:col-span-1">
+        <div className="space-y-1 p-2 bg-zinc-900/40 rounded border border-zinc-800/60 col-span-2 sm:col-span-1 min-w-0">
           <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block truncate">Interview Rate</span>
-          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400">{interviewRate}%</p>
+          <p className="text-lg sm:text-xl font-bold font-mono text-emerald-400 truncate">{interviewRate}%</p>
         </div>
       </div>
 
@@ -162,10 +162,10 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
               });
 
               return (
-                <div key={col.key} className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-3 min-h-[250px] md:min-h-[350px]">
+                <div key={col.key} className="bg-zinc-950 border border-zinc-800 rounded-xl p-3.5 space-y-3 min-h-[250px] md:min-h-[350px] min-w-0 overflow-hidden">
                   {/* Column Header */}
-                  <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5">
-                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-white uppercase tracking-wider">
+                  <div className="flex items-center justify-between border-b border-zinc-900 pb-2.5 min-w-0">
+                    <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-white uppercase tracking-wider min-w-0 flex-1">
                       <Icon className={`w-4 h-4 ${col.color} shrink-0`} /> <span className="truncate">{col.label}</span>
                     </div>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 font-bold shrink-0">
@@ -174,7 +174,7 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
                   </div>
 
                   {/* Cards Container */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 min-w-0">
                     {colLogs.length === 0 ? (
                       <div className="py-8 text-center text-[11px] font-mono text-zinc-600 border border-dashed border-zinc-900 rounded-lg">
                         No jobs in {col.label}
@@ -183,14 +183,14 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
                       colLogs.map((item) => (
                         <div
                           key={item.id}
-                          className="p-3 bg-black border border-zinc-800 hover:border-zinc-700 rounded-lg space-y-2.5 transition shadow"
+                          className="p-3 bg-black border border-zinc-800 hover:border-zinc-700 rounded-lg space-y-2.5 transition shadow min-w-0 overflow-hidden"
                         >
-                          <div>
-                            <h4 className="text-xs font-bold text-white tracking-tight leading-snug break-words line-clamp-2">
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-white tracking-tight leading-snug break-all line-clamp-2">
                               {item.job.title}
                             </h4>
-                            <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1.5 font-mono gap-2">
-                              <span className="flex items-center gap-1 truncate max-w-[80%]">
+                            <div className="flex items-center justify-between text-[11px] text-zinc-400 mt-1.5 font-mono gap-2 min-w-0 overflow-hidden">
+                              <span className="flex items-center gap-1 min-w-0 flex-1 truncate">
                                 <Building className="w-3 h-3 text-zinc-500 shrink-0" /> <span className="truncate">{item.job.company}</span>
                               </span>
                               <a
@@ -205,18 +205,18 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
                           </div>
 
                           {item.job.location && (
-                            <div className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 truncate">
+                            <div className="text-[10px] font-mono text-emerald-400 flex items-center gap-1 min-w-0 overflow-hidden">
                               <MapPin className="w-3 h-3 text-emerald-500 shrink-0" /> <span className="truncate">{item.job.location}</span>
                             </div>
                           )}
 
                           {/* Interactive Stage Selector */}
-                          <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2">
+                          <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2 min-w-0">
                             <span className="text-[9px] font-mono text-zinc-500 uppercase shrink-0">Stage:</span>
                             <select
                               value={col.key === 'SUBMITTED' && item.status === 'APPLIED' ? 'SUBMITTED' : item.status}
                               onChange={(e) => handleStatusChange(item.id, e.target.value)}
-                              className="text-[10px] font-mono px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded focus:outline-none focus:border-zinc-600 transition w-full max-w-[130px] truncate"
+                              className="text-[10px] font-mono px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-300 rounded focus:outline-none focus:border-zinc-600 transition w-full max-w-[110px] sm:max-w-[120px] truncate shrink-0"
                             >
                               <option value="SAVED">Saved</option>
                               <option value="SUBMITTED">Applied</option>
@@ -236,15 +236,15 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
         </div>
       ) : (
         /* List Audit Log View */
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           {logs.map((item) => (
-            <div key={item.id} className="p-3.5 sm:p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <span className="text-xs font-bold text-white break-words">{item.job.title}</span>
-                  <span className="text-xs text-zinc-400 ml-2">@ {item.job.company}</span>
+            <div key={item.id} className="p-3.5 sm:p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-2.5 min-w-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-bold text-white break-all leading-snug">{item.job.title}</span>
+                  <span className="text-xs text-zinc-400 ml-2 font-mono whitespace-nowrap">@ {item.job.company}</span>
                 </div>
-                <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
                   <select
                     value={item.status}
                     onChange={(e) => handleStatusChange(item.id, e.target.value)}
@@ -259,11 +259,11 @@ export function ApplicationLogs({ logs, loadingLogs, fetchLogs, onUpdateStatus }
                 </div>
               </div>
 
-              <p className="text-xs font-mono text-zinc-400 bg-black p-2.5 rounded border border-zinc-900 break-words leading-relaxed">
+              <p className="text-xs font-mono text-zinc-400 bg-black p-2.5 rounded border border-zinc-900 break-all leading-relaxed overflow-hidden">
                 {item.logs || 'No log details available.'}
               </p>
 
-              <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 font-mono gap-2 flex-wrap">
+              <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1 font-mono gap-2 flex-wrap min-w-0">
                 <span>Platform: {item.job.platform}</span>
                 <span>{new Date(item.appliedAt).toLocaleString()}</span>
               </div>
