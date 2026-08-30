@@ -40,13 +40,13 @@ export async function POST(req: Request) {
 
     if (!parsedData) {
       parsedData = {
-        fullName: 'Vandana Tech',
-        email: 'vandana@example.com',
-        phone: '+1 555-019-2831',
-        yearsExperience: 4,
-        skills: 'React, Next.js, TypeScript, Node.js, Python, PostgreSQL, Playwright',
-        resumeSummary: 'Full-stack software engineer with expertise in Next.js, React, Node.js, Python, AI apps & LLMs.',
-        jobPreferences: 'Remote Senior Full-Stack Software Engineer building Next.js, React & AI apps',
+        fullName: '',
+        email: '',
+        phone: '',
+        yearsExperience: 0,
+        skills: '',
+        resumeSummary: '',
+        jobPreferences: '',
       };
     }
 
@@ -68,13 +68,13 @@ export async function POST(req: Request) {
     } else {
       profile = await prisma.profile.create({
         data: {
-          fullName: parsedData.fullName || 'Candidate',
+          fullName: parsedData.fullName || '',
           email: parsedData.email || '',
           phone: parsedData.phone || '',
-          linkedinUrl: parsedData.linkedinUrl || 'https://linkedin.com/in/vandana-dev',
-          githubUrl: parsedData.githubUrl || 'https://github.com/vandana-dev',
-          portfolioUrl: parsedData.portfolioUrl || 'https://vandana.dev',
-          yearsExperience: Number(parsedData.yearsExperience) || 4,
+          linkedinUrl: parsedData.linkedinUrl || '',
+          githubUrl: parsedData.githubUrl || '',
+          portfolioUrl: parsedData.portfolioUrl || '',
+          yearsExperience: Number(parsedData.yearsExperience) || 0,
           skills: parsedData.skills || '',
           resumeSummary: parsedData.resumeSummary || '',
           jobPreferences: parsedData.jobPreferences || '',

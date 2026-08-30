@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Briefcase, Sparkles, Send, CheckCircle, RefreshCw, MapPin, Building, ExternalLink, Search, Globe, ArrowUpDown, Code, Clock, DollarSign, ChevronDown, ChevronUp, FileText, Sliders } from 'lucide-react';
+import { Briefcase, Sparkles, Send, CheckCircle, RefreshCw, MapPin, Building, ExternalLink, Search, Globe, ArrowUpDown, Code, Clock, DollarSign, ChevronDown, ChevronUp, FileText, Sliders, Bookmark } from 'lucide-react';
 import { Job, Profile } from '@/types';
 
 interface JobFeedProps {
@@ -14,8 +14,11 @@ interface JobFeedProps {
   setPlatformFilter: (platform: string) => void;
   handleScrape: (company?: string, location?: string) => void;
   handleAutoApply: (jobId: string) => void;
+  handleSaveJob?: (jobId: string) => void;
+  handleOpenAtsModal?: (job: Job) => void;
   applyingId: string | null;
   appliedJobs: Record<string, string>;
+  savedJobsMap?: Record<string, boolean>;
   profile?: Profile;
 }
 
@@ -52,8 +55,11 @@ export function JobFeed({
   setPlatformFilter,
   handleScrape,
   handleAutoApply,
+  handleSaveJob,
+  handleOpenAtsModal,
   applyingId,
   appliedJobs,
+  savedJobsMap = {},
   profile,
 }: JobFeedProps) {
   const [locationInput, setLocationInput] = useState<string>('');
@@ -442,56 +448,83 @@ export function JobFeed({
                   )}
                 </div>
 
-                {/* Footer Controls */}
-                <div className="border-t border-zinc-900 pt-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={job.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition"
-                    >
-                      Source Opening <ExternalLink className="w-3 h-3" />
-                    </a>
+                  {/* Footer Controls */}
+                  <div className="border-t border-zinc-900 pt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <a
+                        href={job.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition"
+                      >
+                        Source Opening <ExternalLink className="w-3 h-3" />
+                      </a>
 
-                    <button
-                      onClick={() => toggleExpand(job.id)}
-                      className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition font-mono"
-                    >
-                      {isExpanded ? (
-                        <>
-                          Hide Description <ChevronUp className="w-3 h-3" />
-                        </>
-                      ) : (
-                        <>
-                          Full Description <ChevronDown className="w-3 h-3" />
-                        </>
+                      <button
+                        onClick={() => toggleExpand(job.id)}
+                        className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition font-mono"
+                      >
+                        {isExpanded ? (
+                          <>
+                            Hide Description <ChevronUp className="w-3 h-3" />
+                          </>
+                        ) : (
+                          <>
+                            Full Description <ChevronDown className="w-3 h-3" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {/* ATS Breakdown & Tailor Button */}
+                      {handleOpenAtsModal && (
+                        <button
+                          onClick={() => handleOpenAtsModal(job)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-200 text-xs font-medium rounded transition"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> ATS Breakdown
+                        </button>
                       )}
-                    </button>
+
+                      {/* Bookmark / Save Job Button */}
+                      {handleSaveJob && (
+                        <button
+                          onClick={() => handleSaveJob(job.id)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-medium rounded transition ${
+                            savedJobsMap[job.id]
+                              ? 'bg-blue-950/60 border-blue-800 text-blue-300'
+                              : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300'
+                          }`}
+                        >
+                          <Bookmark className={`w-3.5 h-3.5 ${savedJobsMap[job.id] ? 'fill-blue-400 text-blue-400' : ''}`} />
+                          {savedJobsMap[job.id] ? 'Saved' : 'Save Job'}
+                        </button>
+                      )}
+
+                      {status ? (
+                        <span className="text-xs font-mono text-white flex items-center gap-1.5 bg-zinc-900 px-2.5 py-1.5 rounded border border-zinc-700">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {status}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleAutoApply(job.id)}
+                          disabled={isApplying}
+                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-black hover:bg-zinc-200 text-xs font-medium rounded transition disabled:opacity-50"
+                        >
+                          {isApplying ? (
+                            <>
+                              <RefreshCw className="w-3 h-3 animate-spin" /> Applying...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-3 h-3" /> Auto Apply
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
-
-                  {status ? (
-                    <span className="text-xs font-mono text-white flex items-center gap-1.5 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-700">
-                      <CheckCircle className="w-3.5 h-3.5" /> {status}
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleAutoApply(job.id)}
-                      disabled={isApplying}
-                      className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-black hover:bg-zinc-200 text-xs font-medium rounded transition disabled:opacity-50"
-                    >
-                      {isApplying ? (
-                        <>
-                          <RefreshCw className="w-3 h-3 animate-spin" /> Applying...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3 h-3" /> Auto Apply
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
               </div>
             );
           })}

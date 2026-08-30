@@ -32,8 +32,17 @@ export interface Profile {
 
 export interface ApplicationLog {
   id: string;
+  jobId?: string;
   job: Job;
-  status: string;
+  status: 'SAVED' | 'QUEUED' | 'SUBMITTED' | 'INTERVIEWING' | 'OFFER' | 'REJECTED' | 'FAILED' | string;
   logs: string | null;
   appliedAt: string;
+}
+
+export interface AtsBreakdown {
+  matchScore: number;
+  matchedSkills: string[];
+  missingSkills: string[];
+  recommendations: string[];
+  tailoredSummary: string;
 }

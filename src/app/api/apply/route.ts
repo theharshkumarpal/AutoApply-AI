@@ -17,22 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Job not found' }, { status: 404 });
     }
 
-    // Retrieve or default candidate profile
-    let profile = await prisma.profile.findFirst();
-    if (!profile) {
-      profile = await prisma.profile.create({
-        data: {
-          fullName: 'Vandana Tech',
-          email: 'vandana@example.com',
-          phone: '+1 555-019-2831',
-          linkedinUrl: 'https://linkedin.com/in/vandana-dev',
-          githubUrl: 'https://github.com/vandana-dev',
-          portfolioUrl: 'https://vandana.dev',
-          yearsExperience: 4,
-          skills: 'React, Next.js, TypeScript, Node.js, Python, LangChain, Playwright',
-          resumeSummary: 'Full-stack software engineer with expertise in Next.js, React, Node.js, Python, Generative AI, LangChain, and browser automation.',
-        },
-      });
+    // Retrieve candidate profile from database
+    const profile = await prisma.profile.findFirst();
+    if (!profile || !profile.fullName || !profile.email) {
+      return NextResponse.json(
+        { success: false, error: 'Candidate profile is incomplete or missing in database. Please complete your Candidate Profile first.' },
+        { status: 400 }
+      );
     }
 
     // Generate HuggingFace AI Cover Letter

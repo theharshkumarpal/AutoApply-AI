@@ -82,7 +82,7 @@ export async function POST(req: Request) {
 
     // Fetch candidate resume summary for ATS scoring
     const profile = await prisma.profile.findFirst();
-    const resumeText = profile?.resumeSummary || 'Full Stack Software Engineer React Next.js TypeScript Node.js Python';
+    const resumeText = profile?.resumeSummary || profile?.skills || '';
 
     // Limit to top 20 jobs for fast execution
     const targetJobs = scrapedJobsForCompany.slice(0, 20);

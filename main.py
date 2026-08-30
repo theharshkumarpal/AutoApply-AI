@@ -129,6 +129,19 @@ class CoverLetterRequest(BaseModel):
 class CoverLetterResponse(BaseModel):
     coverLetter: str
 
+class AtsBreakdownRequest(BaseModel):
+    resumeText: str
+    jobTitle: str
+    company: str
+    jobDescription: str
+
+class AtsBreakdownResponse(BaseModel):
+    matchScore: int
+    matchedSkills: List[str]
+    missingSkills: List[str]
+    recommendations: List[str]
+    tailoredSummary: str
+
 # ---------------------------------------------------------
 # HELPER: Clean HTML to plain text
 # ---------------------------------------------------------
@@ -338,13 +351,13 @@ async def parse_cv(file: UploadFile = File(...)):
 
     matched_skills = mine_skills(clean_text)
 
-    full_name = "Candidate"
+    full_name = ""
     email = email_match.group(1) if email_match else ""
     phone = phone_match.group(1) if phone_match else ""
-    years_exp = int(exp_match.group(1)) if exp_match else 3
-    skills_str = ", ".join(matched_skills) if matched_skills else "Software Engineering"
-    summary = clean_text[:600] if len(clean_text) > 50 else f"Professional skilled in {skills_str}."
-    preferences = f"Roles focusing on {skills_str}."
+    years_exp = int(exp_match.group(1)) if exp_match else 0
+    skills_str = ", ".join(matched_skills) if matched_skills else ""
+    summary = clean_text[:600] if len(clean_text) > 50 else ""
+    preferences = f"Roles focusing on {skills_str}." if skills_str else ""
 
     if len(clean_text) > 50:
         prompt = f"Extract candidate info from this resume into JSON with keys: fullName, email, phone, yearsExperience, skills (array), resumeSummary (2 sentences), jobPreferences.\nResume:\n{clean_text[:1500]}"
@@ -612,6 +625,55 @@ def cover_letter(req: CoverLetterRequest):
             f"Best regards."
         )
     return CoverLetterResponse(coverLetter=letter)
+
+
+@app.post("/api/ai/ats-breakdown", response_model=AtsBreakdownResponse)
+def ats_breakdown(req: AtsBreakdownRequest):
+    resume_skills = set(s.lower() for s in mine_skills(req.resumeText))
+    job_skills_list = mine_skills(req.jobDescription)
+    job_skills_set = set(s.lower() for s in job_skills_list)
+
+    matched = []
+    missing = []
+
+    for s in job_skills_list:
+        if s.lower() in resume_skills:
+            if s not in matched:
+                matched.append(s)
+        else:
+            if s not in missing:
+                missing.append(s)
+
+    if job_skills_set:
+        ratio = len(matched) / len(job_skills_set)
+        score = min(max(int(ratio * 60 + 40), 45), 98)
+    else:
+        score = 65
+
+    recs = []
+    if missing:
+        top_missing = ", ".join(missing[:4])
+        recs.append(f"Add target technical keywords to your candidate profile: {top_missing}.")
+    recs.append("Highlight measurable metrics (e.g., 'improved API throughput by 40%', 'reduced bundle size by 25%').")
+    recs.append(f"Ensure target position keywords for '{req.jobTitle}' are reflected in your profile resume summary.")
+
+    # Tailored summary generator
+    prompt = (
+        f"Generate a concise 2-sentence tailored resume bullet point for a candidate applying to '{req.jobTitle}' at '{req.company}'.\n"
+        f"Target skills: {', '.join(job_skills_list[:6])}\n"
+        f"Candidate experience: {req.resumeText[:400]}"
+    )
+    tailored = query_hf(prompt, 200)
+    if not tailored or len(tailored) < 30:
+        tailored = f"Experienced software engineer delivering high-impact solutions for {req.jobTitle} roles at {req.company}, specializing in {', '.join(job_skills_list[:4]) if job_skills_list else 'modern web applications'}."
+
+    return AtsBreakdownResponse(
+        matchScore=score,
+        matchedSkills=matched,
+        missingSkills=missing,
+        recommendations=recs,
+        tailoredSummary=tailored
+    )
 
 
 if __name__ == "__main__":
