@@ -29,7 +29,7 @@ export async function runAutoApplyBot(jobUrl: string, applicant: ApplicantProfil
 
     const nameParts = applicant.fullName.split(' ');
     const firstName = nameParts[0] || applicant.fullName;
-    const lastName = nameParts.slice(1).join(' ') || 'Candidate';
+    const lastName = nameParts.slice(1).join(' ') || '';
 
     // Form filling heuristics
     if (platform === 'Greenhouse' || jobUrl.includes('greenhouse.io')) {
