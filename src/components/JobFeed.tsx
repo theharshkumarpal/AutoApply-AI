@@ -305,7 +305,7 @@ export function JobFeed({
       </div>
 
       {/* Feed Status Summary */}
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-900 pb-3">
         <h2 className="text-xs font-semibold tracking-wide text-zinc-400 uppercase flex items-center gap-2">
           <Briefcase className="w-3.5 h-3.5 text-zinc-500" /> Showing {processedJobs.length} of {jobs.length} Openings
         </h2>
@@ -343,21 +343,20 @@ export function JobFeed({
             const isApplying = applyingId === job.id;
             const status = appliedJobs[job.id];
             const isExpanded = expandedJobId === job.id;
-
-            const skillsList = job.reqSkills
+      const skillsList = job.reqSkills
               ? job.reqSkills.split(',').map((s) => s.trim()).filter(Boolean)
               : [job.title];
 
             return (
               <div
                 key={job.id}
-                className="p-6 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition flex flex-col justify-between space-y-5"
+                className="p-4 sm:p-6 bg-zinc-950 border border-zinc-800 rounded-lg hover:border-zinc-700 transition flex flex-col justify-between space-y-4 min-w-0 max-w-full overflow-hidden"
               >
                 {/* Header Row */}
-                <div>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
+                <div className="space-y-3 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 min-w-0">
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-300 font-mono">
                           {job.platform}
                         </span>
@@ -365,60 +364,60 @@ export function JobFeed({
                           {new Date(job.postedAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <h3 className="text-lg font-bold text-white tracking-tight">
+                      <h3 className="text-base sm:text-lg font-bold text-white tracking-tight break-words min-w-0">
                         {job.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-1">
-                        <span className="flex items-center gap-1 font-semibold text-zinc-200">
-                          <Building className="w-3.5 h-3.5 text-zinc-500" /> {job.company}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 pt-0.5 min-w-0">
+                        <span className="flex items-center gap-1 font-semibold text-zinc-200 break-all">
+                          <Building className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {job.company}
                         </span>
-                        <span className="flex items-center gap-1 font-medium text-emerald-400">
-                          <MapPin className="w-3.5 h-3.5 text-emerald-500" /> {job.location}
+                        <span className="flex items-center gap-1 font-medium text-emerald-400 break-all">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> {job.location}
                         </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-zinc-500" /> {job.minExp || '3+ Years Exp'}
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> {job.minExp || '3+ Years Exp'}
                         </span>
-                        <span className="flex items-center gap-1 text-emerald-400 font-mono">
-                          <DollarSign className="w-3.5 h-3.5 text-emerald-500" /> {job.salaryRange || 'Competitive Salary'}
+                        <span className="flex items-center gap-1 text-emerald-400 font-mono shrink-0">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> {job.salaryRange || 'Competitive Salary'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <div className="flex flex-wrap items-center gap-1.5 shrink-0 pt-0.5 sm:pt-0">
                       {job.prefMatchScore !== undefined && (
-                        <div className="text-xs font-mono font-medium px-3 py-1 rounded-md bg-zinc-900 border border-zinc-700 text-amber-300 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                          <span>{job.prefMatchScore}% Preference Match</span>
-                        </div>
+                        <span className="text-[11px] font-mono font-medium px-2.5 py-1 rounded bg-amber-950/40 border border-amber-800/60 text-amber-300 flex items-center gap-1 whitespace-nowrap">
+                          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>{job.prefMatchScore}% Match</span>
+                        </span>
                       )}
 
                       {job.matchScore !== null && (
-                        <div className="text-[11px] font-mono text-zinc-400">
-                          {job.matchScore}% ATS Score
-                        </div>
+                        <span className="text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800 whitespace-nowrap">
+                          {job.matchScore}% ATS
+                        </span>
                       )}
                     </div>
                   </div>
 
                   {/* AI Executive Summary */}
                   {job.cleanSummary && (
-                    <div className="mt-4 p-3.5 bg-zinc-900/60 border border-zinc-800/80 rounded-md text-xs text-zinc-300 leading-relaxed">
+                    <div className="mt-3 p-3 bg-zinc-900/60 border border-zinc-800/80 rounded-md text-xs text-zinc-300 leading-relaxed overflow-hidden break-words min-w-0">
                       <span className="font-semibold text-white flex items-center gap-1.5 mb-1 text-[11px] uppercase tracking-wider font-mono text-zinc-400">
-                        <FileText className="w-3 h-3 text-amber-400" /> AI Executive Summary
+                        <FileText className="w-3 h-3 text-amber-400 shrink-0" /> AI Executive Summary
                       </span>
-                      <div className="whitespace-pre-line leading-relaxed">{job.cleanSummary}</div>
+                      <div className="whitespace-pre-line leading-relaxed break-words text-zinc-300">{job.cleanSummary}</div>
                     </div>
                   )}
 
                   {/* Extracted Required Skills */}
-                  <div className="mt-4 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[11px] font-mono text-zinc-500 mr-1 flex items-center gap-1">
-                      <Code className="w-3 h-3 text-zinc-500" /> Key Skills:
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5 min-w-0">
+                    <span className="text-[11px] font-mono text-zinc-500 mr-1 flex items-center gap-1 shrink-0">
+                      <Code className="w-3 h-3 text-zinc-500 shrink-0" /> Key Skills:
                     </span>
                     {skillsList.map((skill, idx) => (
                       <span
                         key={idx}
-                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300"
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 break-all"
                       >
                         {skill}
                       </span>
@@ -427,99 +426,99 @@ export function JobFeed({
 
                   {/* Collapsible Full Job Description */}
                   {isExpanded && (
-                    <div className="mt-4 p-4 bg-black border border-zinc-900 rounded-md text-xs text-zinc-400 space-y-2 max-h-96 overflow-y-auto font-mono">
+                    <div className="mt-3 p-3.5 bg-black border border-zinc-900 rounded-md text-xs text-zinc-400 space-y-2 max-h-96 overflow-y-auto font-mono break-words min-w-0">
                       <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
                         <h4 className="text-white font-semibold text-xs font-sans">Full Job Description:</h4>
                         {job.refinedDescription && (
                           <span className="text-[10px] text-amber-400 font-mono flex items-center gap-1 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/50">
-                            <Sparkles className="w-3 h-3 text-amber-400" /> ChatModel Refined
+                            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" /> ChatModel Refined
                           </span>
                         )}
                       </div>
-                      <div className="whitespace-pre-line leading-relaxed text-zinc-300">
+                      <div className="whitespace-pre-line leading-relaxed text-zinc-300 break-words">
                         {stripHtmlForDisplay(job.refinedDescription || job.description)}
                       </div>
                     </div>
                   )}
                 </div>
 
-                  {/* Footer Controls */}
-                  <div className="border-t border-zinc-900 pt-3 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <a
-                        href={job.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition"
-                      >
-                        Source Opening <ExternalLink className="w-3 h-3" />
-                      </a>
+                {/* Footer Controls */}
+                <div className="border-t border-zinc-900 pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <a
+                      href={job.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-zinc-400 hover:text-white flex items-center gap-1 transition shrink-0"
+                    >
+                      Source Opening <ExternalLink className="w-3 h-3" />
+                    </a>
 
+                    <button
+                      onClick={() => toggleExpand(job.id)}
+                      className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition font-mono shrink-0"
+                    >
+                      {isExpanded ? (
+                        <>
+                          Hide Description <ChevronUp className="w-3 h-3" />
+                        </>
+                      ) : (
+                        <>
+                          Full Description <ChevronDown className="w-3 h-3" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+                    {/* ATS Breakdown & Tailor Button */}
+                    {handleOpenAtsModal && (
                       <button
-                        onClick={() => toggleExpand(job.id)}
-                        className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1 transition font-mono"
+                        onClick={() => handleOpenAtsModal(job)}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-2.5 py-1.5 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-200 text-[11px] font-medium rounded transition whitespace-nowrap"
                       >
-                        {isExpanded ? (
+                        <Sparkles className="w-3 h-3 text-amber-400 shrink-0" /> ATS Breakdown
+                      </button>
+                    )}
+
+                    {/* Bookmark / Save Job Button */}
+                    {handleSaveJob && (
+                      <button
+                        onClick={() => handleSaveJob(job.id)}
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-1 px-2.5 py-1.5 border text-[11px] font-medium rounded transition whitespace-nowrap ${
+                          savedJobsMap[job.id]
+                            ? 'bg-blue-950/60 border-blue-800 text-blue-300'
+                            : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300'
+                        }`}
+                      >
+                        <Bookmark className={`w-3 h-3 ${savedJobsMap[job.id] ? 'fill-blue-400 text-blue-400' : ''}`} />
+                        {savedJobsMap[job.id] ? 'Saved' : 'Save Job'}
+                      </button>
+                    )}
+
+                    {status ? (
+                      <span className="flex-1 sm:flex-none text-[11px] font-mono text-white flex items-center justify-center gap-1 bg-zinc-900 px-2.5 py-1.5 rounded border border-zinc-700 whitespace-nowrap">
+                        <CheckCircle className="w-3 h-3 text-emerald-400 shrink-0" /> {status}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleAutoApply(job.id)}
+                        disabled={isApplying}
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-1 px-3 py-1.5 bg-white text-black hover:bg-zinc-200 text-[11px] font-medium rounded transition disabled:opacity-50 whitespace-nowrap font-sans"
+                      >
+                        {isApplying ? (
                           <>
-                            Hide Description <ChevronUp className="w-3 h-3" />
+                            <RefreshCw className="w-3 h-3 animate-spin shrink-0" /> Applying...
                           </>
                         ) : (
                           <>
-                            Full Description <ChevronDown className="w-3 h-3" />
+                            <Send className="w-3 h-3 shrink-0" /> Auto Apply
                           </>
                         )}
                       </button>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* ATS Breakdown & Tailor Button */}
-                      {handleOpenAtsModal && (
-                        <button
-                          onClick={() => handleOpenAtsModal(job)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 border border-zinc-700 hover:bg-zinc-800 text-zinc-200 text-xs font-medium rounded transition"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> ATS Breakdown
-                        </button>
-                      )}
-
-                      {/* Bookmark / Save Job Button */}
-                      {handleSaveJob && (
-                        <button
-                          onClick={() => handleSaveJob(job.id)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 border text-xs font-medium rounded transition ${
-                            savedJobsMap[job.id]
-                              ? 'bg-blue-950/60 border-blue-800 text-blue-300'
-                              : 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-300'
-                          }`}
-                        >
-                          <Bookmark className={`w-3.5 h-3.5 ${savedJobsMap[job.id] ? 'fill-blue-400 text-blue-400' : ''}`} />
-                          {savedJobsMap[job.id] ? 'Saved' : 'Save Job'}
-                        </button>
-                      )}
-
-                      {status ? (
-                        <span className="text-xs font-mono text-white flex items-center gap-1.5 bg-zinc-900 px-2.5 py-1.5 rounded border border-zinc-700">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> {status}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleAutoApply(job.id)}
-                          disabled={isApplying}
-                          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-black hover:bg-zinc-200 text-xs font-medium rounded transition disabled:opacity-50"
-                        >
-                          {isApplying ? (
-                            <>
-                              <RefreshCw className="w-3 h-3 animate-spin" /> Applying...
-                            </>
-                          ) : (
-                            <>
-                              <Send className="w-3 h-3" /> Auto Apply
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
+                </div>
               </div>
             );
           })}
