@@ -12,6 +12,7 @@ interface JobFeedProps {
   setSearchQuery: (query: string) => void;
   handleScrape: (company?: string, location?: string) => void;
   handleScrapeCompany?: (companyName: string) => void;
+  handleSearchRole?: (role: string, location?: string) => void;
   handleAutoApply: (jobId: string) => void;
   handleSaveJob?: (jobId: string) => void;
   handleOpenAtsModal?: (job: Job) => void;
@@ -52,6 +53,7 @@ export function JobFeed({
   setSearchQuery,
   handleScrape,
   handleScrapeCompany,
+  handleSearchRole,
   handleAutoApply,
   handleSaveJob,
   handleOpenAtsModal,
@@ -216,7 +218,7 @@ export function JobFeed({
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Company or Role (e.g. Ericsson, Figma)"
+              placeholder="Role or Company (e.g. Frontend Engineer, Data Scientist, Google)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-black border border-zinc-800 rounded-md text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition"
@@ -276,6 +278,18 @@ export function JobFeed({
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Match Preferences
             </button>
+
+            {/* Search by Role Across All Companies */}
+            {searchQuery && (
+              <button
+                onClick={() => handleSearchRole?.(searchQuery, locationInput || undefined)}
+                disabled={scraping}
+                className="flex-1 sm:flex-none px-3.5 py-2 bg-violet-950/80 border border-violet-600 text-violet-300 hover:bg-violet-900 text-xs font-medium rounded transition flex items-center justify-center gap-1.5 disabled:opacity-50 whitespace-nowrap"
+              >
+                <Search className={`w-3.5 h-3.5 text-violet-400 ${scraping ? 'animate-spin' : ''}`} />
+                {scraping ? 'Searching Role...' : `Search "${searchQuery}" Across All Companies`}
+              </button>
+            )}
 
             {/* Direct Company Career Page Scraper Button */}
             {searchQuery && (

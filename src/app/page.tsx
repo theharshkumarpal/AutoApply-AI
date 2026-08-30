@@ -183,6 +183,23 @@ export default function Home() {
     }
   };
 
+  const handleSearchRole = async (role: string, location?: string) => {
+    if (!role || !role.trim()) return;
+    setScraping(true);
+    try {
+      await fetch('/api/jobs/search-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: role.trim(), location: location?.trim() || '' }),
+      });
+      await fetchJobs();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setScraping(false);
+    }
+  };
+
   const handleAutoApply = async (jobId: string) => {
     setApplyingId(jobId);
     try {
@@ -335,6 +352,7 @@ export default function Home() {
             setSearchQuery={setSearchQuery}
             handleScrape={handleScrape}
             handleScrapeCompany={handleScrapeCompany}
+            handleSearchRole={handleSearchRole}
             handleAutoApply={handleAutoApply}
             handleSaveJob={handleSaveJob}
             handleOpenAtsModal={handleOpenAtsModal}
