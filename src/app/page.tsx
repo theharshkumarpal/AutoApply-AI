@@ -19,7 +19,6 @@ export default function Home() {
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState('');
-  const [platformFilter, setPlatformFilter] = useState<string>('ALL');
 
   // Profile state
   const [profile, setProfile] = useState<Profile>({
@@ -119,10 +118,36 @@ export default function Home() {
   const handleScrape = async (company?: string, location?: string) => {
     setScraping(true);
     try {
-      await fetch('/api/jobs', {
+      if (company && company.trim()) {
+        // Search & parse official company career portal live
+        await fetch('/api/jobs/scrape-company', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyName: company.trim() }),
+        });
+      } else {
+        await fetch('/api/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company, location }),
+        });
+      }
+      await fetchJobs();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setScraping(false);
+    }
+  };
+
+  const handleScrapeCompany = async (companyName: string) => {
+    if (!companyName || !companyName.trim()) return;
+    setScraping(true);
+    try {
+      await fetch('/api/jobs/scrape-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company, location, platform: platformFilter }),
+        body: JSON.stringify({ companyName: companyName.trim() }),
       });
       await fetchJobs();
     } catch (err) {
@@ -282,9 +307,8 @@ export default function Home() {
             scraping={scraping}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            platformFilter={platformFilter}
-            setPlatformFilter={setPlatformFilter}
             handleScrape={handleScrape}
+            handleScrapeCompany={handleScrapeCompany}
             handleAutoApply={handleAutoApply}
             handleSaveJob={handleSaveJob}
             handleOpenAtsModal={handleOpenAtsModal}

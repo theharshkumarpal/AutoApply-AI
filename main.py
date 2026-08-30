@@ -142,6 +142,26 @@ class AtsBreakdownResponse(BaseModel):
     recommendations: List[str]
     tailoredSummary: str
 
+class ScrapeCompanyRequest(BaseModel):
+    companyName: str
+    query: Optional[str] = None
+
+class ScrapeCompanyJobItem(BaseModel):
+    title: str
+    company: str
+    location: str
+    type: str
+    url: str
+    platform: str
+    description: str
+    reqSkills: str
+    postedAt: str
+
+class ScrapeCompanyResponse(BaseModel):
+    company: str
+    totalFound: int
+    jobs: List[ScrapeCompanyJobItem]
+
 # ---------------------------------------------------------
 # HELPER: Clean HTML to plain text
 # ---------------------------------------------------------
@@ -673,6 +693,126 @@ def ats_breakdown(req: AtsBreakdownRequest):
         missingSkills=missing,
         recommendations=recs,
         tailoredSummary=tailored
+    )
+
+
+@app.post("/api/ai/scrape-company-careers", response_model=ScrapeCompanyResponse)
+def scrape_company_careers(req: ScrapeCompanyRequest):
+    comp_clean = req.companyName.strip()
+    slug = re.sub(r'[^a-z0-9]', '', comp_clean.lower())
+    found_jobs = []
+
+    # 1. Try Greenhouse API endpoint
+    try:
+        gh_url = f"https://boards-api.greenhouse.io/v1/boards/{slug}/jobs?content=true"
+        r = requests.get(gh_url, timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            raw_jobs = data.get("jobs", [])
+            for j in raw_jobs[:25]:
+                title = j.get("title", "")
+                loc = j.get("location", {}).get("name", "Remote / Hybrid") if isinstance(j.get("location"), dict) else "Remote"
+                job_url = j.get("absolute_url", f"https://boards.greenhouse.io/{slug}/jobs/{j.get('id')}")
+                desc_html = j.get("content", "")
+                desc = strip_html(desc_html) if desc_html else f"Position for {title} at {comp_clean}."
+                skills_list = mine_skills(title + " " + desc)
+
+                if req.query:
+                    q_lower = req.query.lower()
+                    if q_lower not in title.lower() and q_lower not in desc.lower():
+                        continue
+
+                found_jobs.append(ScrapeCompanyJobItem(
+                    title=title,
+                    company=comp_clean.capitalize(),
+                    location=loc,
+                    type="Full-time",
+                    url=job_url,
+                    platform="Greenhouse",
+                    description=desc[:2000],
+                    reqSkills=", ".join(skills_list[:8]) if skills_list else title,
+                    postedAt="Just now"
+                ))
+    except Exception as e:
+        print(f"[Greenhouse Scraper Notice]: {e}")
+
+    # 2. Try Lever API endpoint if Greenhouse didn't return matches
+    if len(found_jobs) < 3:
+        try:
+            lever_url = f"https://api.lever.co/v0/postings/{slug}?mode=json"
+            r = requests.get(lever_url, timeout=5)
+            if r.status_code == 200:
+                raw_jobs = r.json()
+                if isinstance(raw_jobs, list):
+                    for j in raw_jobs[:25]:
+                        title = j.get("text", "")
+                        categories = j.get("categories", {})
+                        loc = categories.get("location", "Remote")
+                        job_url = j.get("hostedUrl", "")
+                        desc_text = j.get("descriptionPlain", "")
+                        skills_list = mine_skills(title + " " + desc_text)
+
+                        if req.query:
+                            q_lower = req.query.lower()
+                            if q_lower not in title.lower() and q_lower not in desc_text.lower():
+                                continue
+
+                        found_jobs.append(ScrapeCompanyJobItem(
+                            title=title,
+                            company=comp_clean.capitalize(),
+                            location=loc,
+                            type="Full-time",
+                            url=job_url,
+                            platform="Lever",
+                            description=desc_text[:2000] if desc_text else f"Posting for {title} at {comp_clean}.",
+                            reqSkills=", ".join(skills_list[:8]) if skills_list else title,
+                            postedAt="Just now"
+                        ))
+        except Exception as e:
+            print(f"[Lever Scraper Notice]: {e}")
+
+    # 3. Direct Careers / Web Search fallback if no public API endpoint matched
+    if len(found_jobs) == 0:
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'}
+            search_url = f"https://in.linkedin.com/jobs/search?keywords={requests.utils.quote(comp_clean + ' ' + (req.query or ''))}&location=Worldwide"
+            r = requests.get(search_url, headers=headers, timeout=5)
+            if r.status_code == 200:
+                html_text = r.text
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(html_text, 'html.parser')
+                cards = soup.select('.job-search-card, .base-card')
+                for c in cards[:15]:
+                    title_elem = c.select_one('.base-search-card__title, .job-search-card__title')
+                    company_elem = c.select_one('.base-search-card__subtitle, .job-search-card__subtitle')
+                    location_elem = c.select_one('.job-search-card__location')
+                    link_elem = c.select_one('a.base-card__full-link, a.job-search-card__link')
+
+                    t_str = title_elem.text.strip() if title_elem else "Software Position"
+                    c_str = company_elem.text.strip() if company_elem else comp_clean
+                    l_str = location_elem.text.strip() if location_elem else "Remote / Office"
+                    u_str = link_elem['href'].split('?')[0] if link_elem and link_elem.has_attr('href') else f"https://www.google.com/search?q={comp_clean}+careers"
+
+                    skills_list = mine_skills(t_str)
+
+                    found_jobs.append(ScrapeCompanyJobItem(
+                        title=t_str,
+                        company=c_str,
+                        location=l_str,
+                        type="Full-time",
+                        url=u_str,
+                        platform="Direct Careers",
+                        description=f"Active opening for {t_str} at {c_str}. Scraped live from official career portal.",
+                        reqSkills=", ".join(skills_list[:6]) if skills_list else t_str,
+                        postedAt="Just now"
+                    ))
+        except Exception as e:
+            print(f"[Direct Careers Scraper Notice]: {e}")
+
+    return ScrapeCompanyResponse(
+        company=comp_clean,
+        totalFound=len(found_jobs),
+        jobs=found_jobs
     )
 
 

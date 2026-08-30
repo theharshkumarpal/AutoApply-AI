@@ -10,9 +10,8 @@ interface JobFeedProps {
   scraping: boolean;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  platformFilter: string;
-  setPlatformFilter: (platform: string) => void;
   handleScrape: (company?: string, location?: string) => void;
+  handleScrapeCompany?: (companyName: string) => void;
   handleAutoApply: (jobId: string) => void;
   handleSaveJob?: (jobId: string) => void;
   handleOpenAtsModal?: (job: Job) => void;
@@ -51,9 +50,8 @@ export function JobFeed({
   scraping,
   searchQuery,
   setSearchQuery,
-  platformFilter,
-  setPlatformFilter,
   handleScrape,
+  handleScrapeCompany,
   handleAutoApply,
   handleSaveJob,
   handleOpenAtsModal,
@@ -150,16 +148,13 @@ export function JobFeed({
       
       const matchesTypedLocation = !locQ || (job.location || '').toLowerCase().includes(locQ);
 
-      const matchesPlatform =
-        platformFilter === 'ALL' || (job.platform || '').toUpperCase().includes(platformFilter.toUpperCase());
-      
       const matchesLocationDropdown =
         locationFilter === 'ALL' ||
         (locationFilter === 'Remote'
           ? (job.location || '').toLowerCase().includes('remote')
           : (job.location || '').toLowerCase().includes(locationFilter.toLowerCase()));
 
-      return matchesSearch && matchesTypedLocation && matchesPlatform && matchesLocationDropdown;
+      return matchesSearch && matchesTypedLocation && matchesLocationDropdown;
     });
 
     // Sorting
@@ -172,7 +167,7 @@ export function JobFeed({
         return (b.matchScore || 0) - (a.matchScore || 0);
       }
     });
-  }, [jobsWithPrefScores, searchQuery, locationInput, platformFilter, locationFilter, sortBy]);
+  }, [jobsWithPrefScores, searchQuery, locationInput, locationFilter, sortBy]);
 
   const toggleExpand = (jobId: string) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
@@ -215,7 +210,7 @@ export function JobFeed({
         </div>
 
         {/* Row 2: Search Query, Location & Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
           {/* Company / Role Search */}
           <div className="relative">
             <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -256,18 +251,6 @@ export function JobFeed({
                 </option>
               ))}
           </select>
-
-          {/* Platform Dropdown */}
-          <select
-            value={platformFilter}
-            onChange={(e) => setPlatformFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-black border border-zinc-800 rounded-md text-xs text-zinc-300 focus:outline-none focus:border-zinc-500 transition"
-          >
-            <option value="ALL">All Platforms</option>
-            <option value="Greenhouse">Greenhouse</option>
-            <option value="Lever">Lever</option>
-            <option value="Direct Careers">Direct Careers</option>
-          </select>
         </div>
 
         {/* Row 3: Sort Selection + Combined Action Buttons */}
@@ -285,14 +268,26 @@ export function JobFeed({
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Filter & Match Preference Button */}
             <button
               onClick={handleApplyPrefFilter}
-              className="flex-1 sm:flex-none px-4 py-2 bg-zinc-900 border border-zinc-700 text-zinc-200 hover:bg-zinc-800 text-xs font-medium rounded transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+              className="flex-1 sm:flex-none px-3.5 py-2 bg-zinc-900 border border-zinc-700 text-zinc-200 hover:bg-zinc-800 text-xs font-medium rounded transition flex items-center justify-center gap-1.5 whitespace-nowrap"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Match Preferences
             </button>
+
+            {/* Direct Company Career Page Scraper Button */}
+            {searchQuery && (
+              <button
+                onClick={() => (handleScrapeCompany ? handleScrapeCompany(searchQuery) : handleScrape(searchQuery))}
+                disabled={scraping}
+                className="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-950/80 border border-emerald-700 text-emerald-300 hover:bg-emerald-900 text-xs font-medium rounded transition flex items-center justify-center gap-1.5 disabled:opacity-50 whitespace-nowrap"
+              >
+                <Globe className={`w-3.5 h-3.5 text-emerald-400 ${scraping ? 'animate-spin' : ''}`} />
+                {scraping ? 'Parsing Career Portal...' : `Parse "${searchQuery}" Career Page`}
+              </button>
+            )}
 
             {/* Combined Live Fetch Button */}
             <button
