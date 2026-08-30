@@ -104,7 +104,32 @@ export default function Home() {
       });
       const data = await res.json();
       if (data.success) {
-        setProfileMsg('Profile saved successfully to database!');
+        setProfileMsg('✓ Profile saved! Now scraping tailored jobs based on your skills...');
+
+        // Trigger a fresh job scrape using jobPreferences or skills as the search context
+        setScraping(true);
+        try {
+          await fetch('/api/jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          });
+        } catch {
+          // Scrape is best-effort
+        }
+        setScraping(false);
+
+        // Re-fetch updated job list from DB
+        await fetchJobs();
+        await fetchLogs();
+
+        setProfileMsg('✓ Profile saved & jobs refreshed! Switching to your feed...');
+
+        // Auto-switch to Jobs Feed tab after a short delay
+        setTimeout(() => {
+          setActiveTab('feed');
+          setProfileMsg('');
+        }, 1200);
       } else {
         setProfileMsg(`Failed to save: ${data.error}`);
       }
@@ -112,6 +137,7 @@ export default function Home() {
       setProfileMsg(`Error: ${err.message}`);
     } finally {
       setSavingProfile(false);
+      setScraping(false);
     }
   };
 

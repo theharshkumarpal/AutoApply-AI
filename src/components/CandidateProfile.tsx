@@ -283,7 +283,7 @@ export function CandidateProfile({
           className="flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 bg-white text-black hover:bg-zinc-200 font-medium text-xs rounded transition disabled:opacity-50"
         >
           <Save className="w-3.5 h-3.5" />
-          {savingProfile ? 'Saving Details & Filtering Jobs...' : 'Save Application Details & Filter Tailored Jobs'}
+          {savingProfile ? 'Saving & Scraping Tailored Jobs...' : 'Save Profile & Fetch Matching Jobs'}
         </button>
       </form>
     </section>
